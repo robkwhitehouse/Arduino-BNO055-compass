@@ -1,7 +1,45 @@
 /*
  - Electronic Compass
- - RKW Jan 2022
+ - RK Whitehouse Jan 2022
+ 
 */
+
+
+/* Software design
+ *  
+ *  There are two sets of methods 
+ *  
+ *  1. Foreground tasks - i.e. user interface tasks
+ *  2. Background tasks - run at specific intervals
+ *  
+ *  The background tasks are run by the "TaskScheduler" library without any
+ *  direct user interaction
+ *  This is a co-operative (non-preemptive) scheduler
+ *  
+ *  The foreground tasks are implemented as a set of methods that are controlled
+ *  via a very simple finite state machine. The states are changed in response 
+ *  to user actions. The scheduler dispatcher is called in the main "loop()" method
+ *  
+ *  NB All of the above tasks must be non-blocking, otherwise the scheduler 
+ *  will never run. If your background tasks are not executing on time it is probably
+ *  because some individual task is taking too long.
+ *
+ * Communication between background and foreground tasks is via a set of global static
+ * objects and variables
+ * 
+ * INterrupts are currently not used but I do intend to add support for a rotary encoder 
+ * as a general purpose user input device. This will use a couple of interrupts.
+ */
+
+/*
+ * Hardware design
+ * 
+ * Runs on an ESP-32 devkit with two devices attached to the standard
+ * ESP-32 I2C bus pins
+ * 1. A 128 X 64 OLED display
+ * 2. An Adafruit BNO-055 sensor module 
+ */
+
 
 /* Imported libraries */
 #include <SPI.h>
@@ -46,7 +84,7 @@
 
 Adafruit_SH1106G display = Adafruit_SH1106G(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-//Declare background task methods
+//Pre-Declare background task methods
 void output();
 void updateHeading();
 void turnOff();
@@ -54,6 +92,7 @@ void getCalStatus();
 void checkWiFiClients();
 
 /* Declare Global Singleton Objects */
+
 // Background tasks
 Task outputTask(1000, TASK_FOREVER, &output);              // do output every 1 seconds
 Task updateHeadingTask(500, TASK_FOREVER, &updateHeading); //Read sensor twice per second
