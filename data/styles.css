@@ -1,0 +1,46 @@
+﻿body {
+    font-family: Georgia, "Trebuchet MS", Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    margin-right: 30px; 
+    padding: 0px;
+}
+
+.programVersionDiv {
+    display: inline;
+    font-size: 22pt;
+}
+
+.programVersionDiv img {
+    max-width: 100px;
+    vertical-align: text-top;
+}
+
+.reboot {
+    color: red;
+}
+
+h1 {
+    color: black;
+    font-weight: lighter;
+    background-repeat: no-repeat;
+    margin: 10px;
+    font-size: 22px;
+}
+
+td, th {
+    color: black;
+    font-weight: lighter;
+    background-repeat: no-repeat;
+    margin: 0px;
+    font-size: 18px;
+    border-right: solid 1px white;
+    padding-right: 13px;
+    padding-left: 13px;
+}
+
+
+TH, .bold {
+    background-color: lightblue;
+    color: black;
+}
+

@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>imsNMEAWiFi</title>
+    <link rel="stylesheet" type="text/css" href="styles.css" media="all" />
+    <!-- <link rel="stylesheet" type="text/css" href="jquery-ui.css" media="all" /> -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+    <!-- <script type="text/javascript" src="jquery-ui.min.js"></script> -->
+
+    <script type="text/javascript">
+
+        var indexUpdateMilliSeconds = 5 * 1000;
+        var activeDiv = null;
+        var fixedIntervalAlarms = null;
+
+        function showDiv(divToShow) {
+
+            if (null != activeDiv)
+                $('#' + activeDiv).hide();
+
+            activeDiv = divToShow;
+            $('#' + activeDiv).show();
+        }
+
+        function updateConfiguration() {
+
+			// Get the configuration information
+
+		   	$.ajax({
+		    	url: "getConfiguration"
+		    }).done(function (data) {
+
+		    	// We have the data, process it.
+
+		        var indexConfiguration = data.documentElement;
+		        $("#accessPointSSIDInput").val(indexConfiguration.getAttribute("AccessPointSSID"));
+		        $("#accessPointPasswordInput").val(indexConfiguration.getAttribute("AccessPointPassword"));
+		        $("#tcpPortInput").val(indexConfiguration.getAttribute("TCPPort"));
+		        $("#maximumTCPClientCountInput").prop('selectedIndex', indexConfiguration.getAttribute("MaximumTCPClientCount") - 1);
+		        $("#nmeaBaudRateInput").val(indexConfiguration.getAttribute("NMEABaudRate"));
+
+				// Process the reboot required
+
+				var reBootRequired = indexConfiguration.getAttribute("ReBootRequired");
+				if (reBootRequired === "true")
+      				$('#reBootDiv').show();
+
+		    }).fail(function (jqXHR, textStatus) {
+
+		    	alert("Contact with host lost!" + textStatus);
+		  	});
+        }
+
+        function updateNameVersion() {
+
+            // Get the program name and version
+
+            $.ajax({
+                url: "getNameVersion"
+            }).done(function (data) {
+
+                // We have the data, process it.
+
+                var indexNameVersionETC = data.documentElement;
+                $("#programName").html(indexNameVersionETC.getAttribute("Name"));
+                $("#programVersion").html(indexNameVersionETC.getAttribute("Version"));
+                $("#programCopyright").html(indexNameVersionETC.getAttribute("Copyright"));
+
+                document.title = indexNameVersionETC.getAttribute("Name");
+
+            }).fail(function (jqXHR, textStatus) {
+
+                alert("Contact with host lost!" + textStatus);
+            });
+        }
+
+        function doReboot()
+        {
+            // Reqiest a reboot
+
+            $.ajax({
+                url: "doReBoot"
+            }).done(function (data) {
+
+                alert("Reboot requested!");
+
+            });
+        }
+
+        // At this point the page is running
+
+        $(document).ready(function () {
+
+            // Set the default div to the home div.
+
+            showDiv('homeDiv');
+
+            updateNameVersion();
+            updateConfiguration();
+        });
+    </script>
+
+</head>
+<body>
+
+    <div class='mainBody'>
+
+		<div class='programVersionDiv'>
+            <span id="programName">[programName]</span>&nbsp;
+            <span id="programVersion">[programVersion]</span>
+            <img class='logo' src="Infatuation.jpg"/>
+        </div>
+		<br />
+        <button id="homeDivButton" onclick="showDiv('homeDiv');">Home</button>
+        <button id="aboutDivButton" onclick="showDiv('aboutDiv');">About</button>
+        <br />
+        <br />
+        <div class="reboot" id="reBootDiv" style="display:none;">
+  			<p>
+				Changes will only take effect after a <button onclick="doReboot();">Reboot</button>
+        	</p>
+        </div>
+
+        <!-- Home Div -->
+
+        <div id="homeDiv" style="display:none;">
+
+            <hr />
+            <h1>Settings</h1>
+
+            <form action="/doUpdate" method="get" style="margin-bottom:20px;">
+
+                <table>
+
+                    <tr>
+                        <td>Access Point SSID:</td>
+                        <td>
+                            <input type="text" name="accessPointSSIDInput" id="accessPointSSIDInput" placeholder="32 characters maximum" minlength="1"  maxlength="32" pattern="[a-zA-Z0-9]+" required />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Access Point Password:</td>
+                        <td>
+                            <input type="text" name="accessPointPasswordInput" id="accessPointPasswordInput" placeholder="64 characters maximum" minlength="8" maxlength="64" pattern="[a-zA-Z0-9]+" placeholder="Min length 8!"/>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td></td>
+                        <td>
+                            Minimum password length of 8 characters.
+                        </td>
+                    </tr>
+
+                    <tr>
+                    	<td>TCP Client Port:</td>
+                    	<td>
+                    		<input type="number" name="tcpPortInput" id="tcpPortInput" min="1" max="65535" required>
+						</td>
+                    </tr>
+
+                    <tr>
+                    	<td>Maximum TCP Client Count:</td>
+                    	<td>
+                    		<select name="maximumTCPClientCountInput" id="maximumTCPClientCountInput">
+							  	<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+							  	<option value="4">4</option>
+							  	<option value="5">5</option>
+							  	<option value="6">6</option>
+							  	<option value="7">7</option>
+							  	<option value="8">8</option>
+							    <option value="9">9</option>
+							    <option value="10">10</option>
+							</select>
+						</td>
+                    </tr>
+
+                    <tr>
+                    	<td>NMEA baud rate:</td>
+                    	<td>
+                    		<select name="nmeaBaudRateInput" id="nmeaBaudRateInput">
+                    			<option value="300">300</option>
+                    			<option value="1200">1200</option>
+                    			<option value="2400">2400</option>
+                    			<option value="4800">4800</option>
+                    			<option value="9600">9600</option>
+                    			<option value="19200">19200</option>
+                    			<option value="38400">38400</option>
+                    			<option value="57600">57600</option>
+                    			<option value="115200">115200</option>
+							</select>
+						</td>
+                    </tr>
+
+                    <tr>
+                        <td></td>
+                        <td>
+                            <button>Update</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+            <p>
+            	&copy; M.D.Waller G0PJO
+            </p>
+        </div>
+
+        <!-- About Div -->
+
+        <div id="aboutDiv" style="display:none;">
+
+            <hr />
+            <h1>License Agreement</h1>
+            <p style="max-width:700px;">
+                THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+                INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+                PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+                FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+                ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+            </p>
+            <p style="margin-left: 20px;">
+                M.D. Waller G0PJO
+                <br />
+                Olive Cottage,
+                <br />
+                6, Church Road,
+                <br />
+                Chelmondiston,
+                <br />
+                Ipswich,
+                <br />
+                Suffolk,
+                <br />
+                IP9 1HS
+                <br />
+                United Kingdom
+                <br />
+                <br />
+                Tel: (+44) [0]1473 780561
+                <br>
+                Email: Martin@The-Wallers.net
+                <br/>
+                <br/>
+                &copy; M.D.Waller G0PJO
+            </p>
+        </div>
+    </div>
+</body>
+</html>
